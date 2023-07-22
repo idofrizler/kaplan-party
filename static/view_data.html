@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>View data</h1>
+
+<form id="dataForm">
+  <label for="lat">Latitude:</label><br>
+  <input type="text" id="lat" name="lat"><br>
+  <label for="long">Longitude:</label><br>
+  <input type="text" id="long" name="long"><br>
+  <label for="date">Date:</label><br>
+  <input type="date" id="date" name="date"><br>
+  <input type="submit" value="Submit">
+</form>
+
+<div id="message"></div>
+<div id="mapid" style="height: 400px;"></div>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+let map;
+let markers = [];
+
+function initMap(lat, long) {
+    map = L.map('mapid').setView([lat, long], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+}
+
+function addMarker(lat, long) {
+    let marker = L.marker([lat, long]).addTo(map);
+    markers.push(marker);
+}
+
+document.getElementById('dataForm').onsubmit = function(e) {
+    e.preventDefault();
+    let lat = parseFloat(document.getElementById('lat').value);
+    let long = parseFloat(document.getElementById('long').value);
+    let date = document.getElementById('date').value;
+
+    fetch('/get_data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({latitude: lat, longitude: long, date: date}),
+    }).then(response => response.json())
+      .then(data => {
+          document.getElementById('message').innerHTML = "Number of devices: " + data.count;
+      });
+    
+    fetch('/get_location_data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({latitude: lat, longitude: long, date: date}),
+    }).then(response => response.json())
+      .then(data => {
+          // Remove old markers
+          markers.forEach(marker => map.removeLayer(marker));
+          markers = [];
+          // Add new markers
+          data.locations.forEach(location => addMarker(location.coordinates[1], location.coordinates[0]));
+      });
+    
+    if (!map) {
+        initMap(lat, long);
+    } else {
+        map.setView([lat, long]);
+    }
+}
+</script>
+<script>
+    document.getElementById('date').valueAsDate = new Date();
+</script>
+    
+</body>
+</html>

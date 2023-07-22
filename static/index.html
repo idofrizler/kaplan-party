@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet">
+    <title>Share your location</title>
+    <style>
+        .map-container {
+            height: 300px;
+            position: relative;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <h1 class="text-center mb-4">Share your location</h1>
+
+        <div id="controls" class="text-center">
+            <button id="share_location" class="btn btn-primary mb-2">Share Location</button>
+            <button onclick="window.location.href='/view_data';" class="btn btn-secondary mb-2">View Data</button>
+        </div>
+
+        <div class="map-container mb-4" style="display: none;">
+            <div id="map"></div>
+        </div>
+
+        <div id="thank_you" class="text-center" style="display: none;">
+            <p>Thank you for sharing your location.</p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="/static/index.js" defer></script>
+</body>
+</html>
