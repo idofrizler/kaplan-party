@@ -81,28 +81,42 @@ def get_data():
     count = db.locations.count_documents(query)
     return jsonify({"count": count}), 200
 
-@app.route("/get_location_data", methods=['POST'])
+@app.route('/get_location_data', methods=['POST'])
 def get_location_data():
-    data = request.json
+    data = request.get_json()
+    
+    if not all(key in data for key in ("longitude", "latitude", "radius", "date")):
+        return jsonify({"error": "Data missing in request"}), 400
+
     date = datetime.strptime(data['date'], '%Y-%m-%d')
     next_day = date + timedelta(days=1)
-    
-    radius_in_km = 1
-    earth_radius_in_km = 6371
-    radius_in_radians = radius_in_km / earth_radius_in_km
-    
+    radius_in_radians = float(data["radius"]) / 6371e3 # convert radius from meters to radians
+
     query = {
-        "timestamp": {"$gte": date, "$lt": next_day},
         "location": {
             "$geoWithin": {
                 "$centerSphere": [[data["longitude"], data["latitude"]], radius_in_radians]
             }
+        },
+        "timestamp": {
+            "$gte": date,
+            "$lt": next_day
         }
     }
-
-    cursor = db.locations.find(query)
-    locations = [doc['location'] for doc in cursor]
-    return jsonify({"locations": locations}), 200
+    
+    records = db.locations.find(query)
+    
+    locations = []
+    for record in records:
+        locations.append({
+            'latitude': record['location']['coordinates'][1],
+            'longitude': record['location']['coordinates'][0]
+        })
+    
+    return jsonify({
+        "locations": locations,
+        "device_count": len(locations)
+    })
 
 if __name__ == "__main__":
     app.run(port=3000)
